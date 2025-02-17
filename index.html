@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quran Flashcards</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	    <style>
+        body { 
+            text-align: center; 
+            background-color: #f4f4f4; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh; 
+            margin: 0; 
+        }
+        .main-content {
+            flex: 1;
+            padding-bottom: 20px;
+        }
+        .flashcard-container { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 60vh;
+            position: relative; 
+        }
+        .flashcard { 
+            width: 80vw; 
+            min-height: 50vh;
+            perspective: 1000px; 
+            position: relative; 
+            cursor: pointer; 
+        }
+        .card-inner { 
+            position: relative; 
+            width: 100%; 
+            min-height: 100%; 
+            text-align: center; 
+            transition: transform 0.6s; 
+            transform-style: preserve-3d; 
+        }
+        .flipped .card-inner { transform: rotateY(180deg); }
+        .card-face { 
+            position: absolute; 
+            width: 100%; 
+            min-height: 100%; 
+            backface-visibility: hidden; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: flex-start;
+            align-items: center; 
+            border-radius: 10px; 
+            overflow: auto; 
+        }
+        .front { background: #17a2b8; color: white; }
+        .back { background: #28a745; color: white; transform: rotateY(180deg); }
+        .ayah-info { 
+            position: absolute; 
+            top: 10px; 
+            right: 10px; 
+            font-size: 12px; 
+            color: white; 
+            background: rgba(0, 0, 0, 0.5); 
+            padding: 5px; 
+            border-radius: 5px; 
+        }
+        .content-wrapper {
+            margin-top: 50px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 100%;
+        }
+        #ayahText, #translitText, #translation { 
+            max-width: 90%; 
+            word-wrap: break-word; 
+            margin: auto;
+        }
+        .top-left-controls { 
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            display: flex; 
+            gap: 10px; 
+            z-index: 1; 
+        }
+        .nav-buttons {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+			margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+            z-index: 2;
+        } 
+
+        .btn-nav {
+            background: rgba(255, 255, 255, 0.2) !important;
+            border: none;
+            color: white !important;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+    <header class="bg-dark text-white p-3 text-center">
+        <h1>Quran Flashcards</h1>
+    </header>
+
+    <div class="container mt-3">
+        <select id="suraSelect" class="form-select w-50 mx-auto"></select>
+    </div>
+    <div class="flashcard-container">
+        <div class="flashcard" id="flashcard">
+            <div class="card-inner">
+                <div class="card-face front">
+                    <div class="top-left-controls">
+                        <button id="playAudio" class="btn btn-light btn-sm"><i class="bi bi-play"></i></button>
+                        <button id="toggleTranslit" class="btn btn-warning btn-sm"><i class="bi bi-globe"></i></button>
+                    </div>
+                    <div class="nav-buttons">
+                        <button id="prev" class="btn btn-nav"><i class="bi bi-chevron-left"></i></button>
+                        <button id="next" class="btn btn-nav"><i class="bi bi-chevron-right"></i></button>
+                    </div>
+                    <div class="ayah-info" id="ayahInfo"></div>
+                    <div class="content-wrapper">
+                        <p id="ayahText" class="fs-3"></p>
+                        <p id="translitText" class="fs-5" style="display:none;"></p>
+                    </div>
+                </div>
+                <div class="card-face back">
+                    <div class="content-wrapper">
+                        <p id="translation" class="fs-4"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://api.alquran.cloud/v1/surah";
+		const AUDIO_BASE_URL = "https://cdn.islamic.network/quran/audio/128/ar.alafasy/";
+        let sura = 1;
+        let ayahIndex = 0;
+        let currentSurah = [];
+		let currentAudio = null;
+
+        function loadSurahs() {
+            $.get("https://api.alquran.cloud/v1/surah", function(data) {
+                if (data?.data) {
+                    $('#suraSelect').empty();
+                    data.data.forEach(s => {
+                        $('#suraSelect').append(`<option value="${s.number}">${s.englishName} (${s.englishNameTranslation})</option>`);
+                    });
+                }
+            }).fail(() => alert("Failed to load Surahs."));
+        }
+
+        function loadSurah() {
+		   console.log("URL", `${API_URL}/${sura}/editions/quran-uthmani,en.transliteration,en.sahih` );
+            $.get(`${API_URL}/${sura}/editions/quran-uthmani,en.transliteration,en.sahih`, function(data) {
+                if (data?.data && data.data[0]?.ayahs) {
+                    currentSurah = data.data[0].ayahs.map((ayah, index) => ({
+                        arabic: ayah.text,
+                        translit: data.data[1].ayahs[index].text,
+                        translation: data.data[2].ayahs[index].text,
+						audio: `${AUDIO_BASE_URL}${index+1}.mp3`
+                    }));
+					console.log("currentSurah", currentSurah );
+                    ayahIndex = 0;
+                    displayAyah();
+                }
+            }).fail(() => alert("Error fetching Surah data."));
+        }
+
+        function displayAyah() {
+		            // Stop any currently playing audio
+            if(currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+			
+			$("#playAudio").find("i").removeClass("bi-pause").addClass("bi-play"); // Change to play icon
+			
+            if (currentSurah.length > 0) {
+                const ayah = currentSurah[ayahIndex];
+                $("#ayahText").text(ayah.arabic);
+                $("#translitText").text(ayah.translit);
+                $("#translation").text(ayah.translation);
+                $("#ayahInfo").text(`Surah ${sura}, Ayah ${ayahIndex + 1}`);
+				
+				$("#playAudio").off("click").on("click", function (e) {
+					e.stopPropagation();
+
+					if (!ayah.audio) {
+						alert("Audio not available for this Ayah.");
+						return;
+					}
+
+					let playButton = $(this).find("i"); // Get the icon inside the button
+
+					if (currentAudio) {
+						if (!currentAudio.paused) {
+							currentAudio.pause();
+							playButton.removeClass("bi-pause").addClass("bi-play"); // Change to play icon
+						} else {
+							currentAudio.play().catch(error => {
+								alert("Error playing audio: " + error.message);
+							});
+							playButton.removeClass("bi-play").addClass("bi-pause"); // Change to pause icon
+						}
+					} else {
+						currentAudio = new Audio(ayah.audio);
+						currentAudio.play().catch(error => {
+							alert("Error playing audio: " + error.message);
+						});
+
+						playButton.removeClass("bi-play").addClass("bi-pause"); // Change to pause icon
+
+						currentAudio.onended = function () {
+							playButton.removeClass("bi-pause").addClass("bi-play"); // Reset to play icon when audio ends
+							currentAudio = null;
+						};
+					}
+				});
+            }
+        }
+
+        $(document).ready(() => {
+            loadSurahs();
+            loadSurah();
+
+            $('#suraSelect').change(function() {
+                sura = $(this).val();
+                loadSurah();
+            });
+
+            $('#prev').click(() => {
+                if (ayahIndex > 0) {
+                    ayahIndex--;
+                    displayAyah();
+                }
+				$('#flashcard').removeClass('flipped');
+            });
+
+            $('#next').click(() => {
+                if (ayahIndex < currentSurah.length - 1) {
+                    ayahIndex++;
+                    displayAyah();
+                }
+				$('#flashcard').removeClass('flipped');
+            });
+
+
+			$('#flashcard').click(function(event) {
+                if (!$(event.target).closest('button').length) {
+                    $(this).toggleClass('flipped');
+                }
+            });
+
+
+            $('#toggleTranslit').click(function(e) {
+                e.stopPropagation();
+                $('#translitText').toggle();
+            });
+        });
+    </script>
+</body>
+</html>
