@@ -151,7 +151,7 @@
                     </div>
                     <div class="ayah-info" id="ayahInfo"></div>
                     <div class="content-wrapper">
-                        <p id="ayahText" class="fs-3"></p>
+                        <p id="ayahText"></p>
                         <p id="translitText" class="fs-5" style="display:none;"></p>
                     </div>
                 </div>
@@ -186,6 +186,16 @@
                             <label class="form-label">Reciter</label>
                             <select id="reciterSelect" class="form-select"></select>
                         </div>
+						<div class="mb-3">
+							<label for="fontSizeSelect" class="form-label">Font Size</label>
+							<select id="fontSizeSelect" class="form-select">
+								<option value="fs-1">Very Large</option>
+								<option value="fs-2">Large</option>
+								<option value="fs-3" selected>Medium</option>
+								<option value="fs-4">Small</option>
+								<option value="fs-5">Very Small</option>
+							</select>
+						</div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -213,8 +223,20 @@
         let settings = {
             script: localStorage.getItem('script') || 'quran-uthmani',
             translation: localStorage.getItem('translation') || 'en.sahih',
-            reciter: localStorage.getItem('reciter') || 'ar.alafasy'
+            reciter: localStorage.getItem('reciter') || 'ar.alafasy',
+			fontSize: localStorage.getItem('fontSize') || 'fs-3' 
         };
+		
+		    // Function to apply the font size from localStorage
+		function applyFontSize() {
+		    // Remove the previous font size class (if any)
+			$("#ayahText").removeClass(function (index, className) {
+				return (className.match(/\bfs-\S+/g) || []).join(' '); // Remove any class that starts with "fs-"
+			});
+			const fontSizeClass = settings.fontSize;
+			$("#ayahText").addClass(fontSizeClass); // Apply font size class
+			$("#fontSizeSelect").val(fontSizeClass); // Set the dropdown value based on localStorage
+		}
 
         function loadEditions() {
             $.get("https://api.alquran.cloud/v1/edition", function(data) {
@@ -322,6 +344,7 @@
             loadEditions();
             loadSurahs();
             loadSurah();
+			applyFontSize(); 
 
             $('#settingsBtn').click(() => $('#settingsModal').modal('show'));
 
@@ -329,15 +352,18 @@
                 settings = {
                     script: $('#scriptSelect').val(),
                     translation: $('#translationSelect').val(),
-                    reciter: $('#reciterSelect').val()
+                    reciter: $('#reciterSelect').val(),
+					fontSize: $('#fontSizeSelect').val()
                 };
                 
                 localStorage.setItem('script', settings.script);
                 localStorage.setItem('translation', settings.translation);
                 localStorage.setItem('reciter', settings.reciter);
+				localStorage.setItem('fontSize', settings.fontSize);
                 
                 $('#settingsModal').modal('hide');
                 loadSurah();
+				applyFontSize(); 
             });
 
             $('#suraSelect').change(function() {
