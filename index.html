@@ -123,11 +123,11 @@
 		  }
 		}
 	    #ayahText.fs-1 { font-size: 3rem !important; }  
-#ayahText.fs-2 { font-size: 2rem !important; }  
-#ayahText.fs-3 { font-size: 1.75rem !important; }  
-#ayahText.fs-4 { font-size: 1.5rem !important; }  
-#ayahText.fs-5 { font-size: 1.25rem !important; }  
-#ayahText.fs-6 { font-size: 1rem !important; }
+		#ayahText.fs-2 { font-size: 2rem !important; }  
+		#ayahText.fs-3 { font-size: 1.75rem !important; }  
+		#ayahText.fs-4 { font-size: 1.5rem !important; }  
+		#ayahText.fs-5 { font-size: 1.25rem !important; }  
+		#ayahText.fs-6 { font-size: 1rem !important; }
     </style>
 </head>
 <body>
@@ -140,8 +140,7 @@
 		<label for="suraSelect" class="form-label mb-0 me-1 fw-bold">Select Surah</label>
 		<select id="suraSelect" class="form-select w-50"></select>
 	</div>
-	
-	
+
     
     <div class="flashcard-container">
         <div class="flashcard" id="flashcard">
@@ -350,7 +349,7 @@
             loadEditions();
             loadSurahs();
             loadSurah();
-			applyFontSize(); 
+	    applyFontSize(); 
 
             $('#settingsBtn').click(() => $('#settingsModal').modal('show'));
 
@@ -365,11 +364,11 @@
                 localStorage.setItem('script', settings.script);
                 localStorage.setItem('translation', settings.translation);
                 localStorage.setItem('reciter', settings.reciter);
-				localStorage.setItem('fontSize', settings.fontSize);
+		localStorage.setItem('fontSize', settings.fontSize);
                 
                 $('#settingsModal').modal('hide');
                 loadSurah();
-				applyFontSize(); 
+		applyFontSize(); 
             });
 
             $('#suraSelect').change(function() {
