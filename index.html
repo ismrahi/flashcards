@@ -226,6 +226,8 @@
         let ayahIndex = parseInt(localStorage.getItem('currentAyah')) || 0;
         let currentSurah = [];
         let currentAudio = null;
+		let audioContext = null;
+		let currentSource = null;
 
         // Settings with defaults
         let settings = {
@@ -319,32 +321,50 @@
                 $("#translation").text(ayah.translation);
                 $("#ayahInfo").text(`Surah ${sura}, Ayah ${ayahIndex + 1}`);
 
-                $("#playAudio").off("click").on("click", function (e) {
-                    e.stopPropagation();
-                    if (!ayah.audio) {
-                        alert("Audio not available for this Ayah.");
-                        return;
-                    }
 
-                    const playButton = $(this).find("i");
-                    if (currentAudio) {
-                        if (!currentAudio.paused) {
-                            currentAudio.pause();
-                            playButton.removeClass("bi-pause").addClass("bi-play");
-                        } else {
-                            currentAudio.play();
-                            playButton.removeClass("bi-play").addClass("bi-pause");
-                        }
-                    } else {
-                        currentAudio = new Audio(ayah.audio);
-                        currentAudio.play();
-                        playButton.removeClass("bi-play").addClass("bi-pause");
-                        currentAudio.onended = () => {
-                            playButton.removeClass("bi-pause").addClass("bi-play");
-                            currentAudio = null;
-                        };
-                    }
-                });
+				$("#playAudio").off("click").on("click", function (e) {
+					e.stopPropagation();
+
+					if (!currentSurah[ayahIndex].audio) {
+						alert("Audio not available for this Ayah.");
+						return;
+					}
+
+					const playButton = $(this).find("i");
+
+					if (!audioContext) {
+						audioContext = new (window.AudioContext || window.webkitAudioContext)();
+					}
+
+					// Stop any currently playing audio
+					if (currentSource) {
+						currentSource.stop();
+						currentSource = null;
+						playButton.removeClass("bi-pause").addClass("bi-play");
+						return; // If audio was playing, just stop it
+					}
+
+					// Fetch and play the new audio
+					fetch(currentSurah[ayahIndex].audio)
+						.then(response => response.arrayBuffer())
+						.then(data => audioContext.decodeAudioData(data))
+						.then(buffer => {
+							let source = audioContext.createBufferSource();
+							source.buffer = buffer;
+							source.connect(audioContext.destination);
+							source.start(0);
+							currentSource = source;
+
+							playButton.removeClass("bi-play").addClass("bi-pause");
+
+							source.onended = function () {
+								playButton.removeClass("bi-pause").addClass("bi-play");
+								currentSource = null;
+							};
+						})
+						.catch(error => console.error('Audio playback error:', error));
+				});
+
             }
         }
 
@@ -432,7 +452,7 @@
 			btn.classList.toggle("btn-success", !autoPlayEnabled);
 		}
 
-		let audioContext = null;
+
 
 		function playAndAdvance() {
 			if (!autoPlayEnabled || ayahIndex >= currentSurah.length) {
@@ -448,6 +468,9 @@
 				audioContext = new (window.AudioContext || window.webkitAudioContext)();
 			}
 
+			// Stop any previous audio before playing the next one
+			stopCurrentAudio();
+
 			fetch(ayah.audio)
 				.then(response => response.arrayBuffer())
 				.then(data => audioContext.decodeAudioData(data))
@@ -456,8 +479,10 @@
 					source.buffer = buffer;
 					source.connect(audioContext.destination);
 					source.start(0);
+					currentSource = source; // ✅ Store the reference correctly
 
 					source.onended = function () {
+						currentSource = null;
 						if (autoPlayEnabled) {
 							ayahIndex++;
 							if (ayahIndex < currentSurah.length) {
@@ -475,24 +500,57 @@
 
 
 
+
 		document.getElementById("prev").addEventListener("click", function () {
 			autoPlayEnabled = false;
 			updateAutoPlayButton();
+			stopCurrentAudio();
+			if (ayahIndex > 0) {
+				ayahIndex--;
+				displayAyah();
+			}
 		});
+
 
 		document.getElementById("next").addEventListener("click", function () {
 			autoPlayEnabled = false;
 			updateAutoPlayButton();
+			stopCurrentAudio();
+			if (ayahIndex < currentSurah.length - 1) {
+				ayahIndex++;
+				displayAyah();
+			}
 		});
+
 
 		document.getElementById("suraSelect").addEventListener("change", function () {
 			autoPlayEnabled = false;
 			updateAutoPlayButton();
+			stopCurrentAudio(); // Stop audio before changing surah
+			sura = this.value;
+			ayahIndex = 0;
+			loadSurah();
 		});
+
+		
 		document.getElementById("saveSettings").addEventListener("click", function () {
         autoPlayEnabled = false;
         updateAutoPlayButton();
-    });
+		stopCurrentAudio(); // Stop any currently playing audio
+		});
+	
+		function stopCurrentAudio() {
+			if (currentSource) {
+				try {
+					currentSource.stop(); // ✅ Stop the current audio
+				} catch (e) {
+					console.error("Error stopping audio:", e);
+				}
+				currentSource = null; // ✅ Clear the reference
+			}
+		}
+
+
 	</script>
 </body>
 </html>
