@@ -226,8 +226,9 @@
         let ayahIndex = parseInt(localStorage.getItem('currentAyah')) || 0;
         let currentSurah = [];
         let currentAudio = null;
-		let audioContext = null;
-		let currentSource = null;
+	let audioContext = null;
+	let currentSource = null;
+	let autoPlayEnabled = false;
 
         // Settings with defaults
         let settings = {
@@ -432,19 +433,19 @@
             });
         });
     </script>
-	<script>
-		let autoPlayEnabled = false;
+    <script>
 
 		document.getElementById("autoPlayToggle").addEventListener("click", function () {
-			autoPlayEnabled = !autoPlayEnabled;
-			updateAutoPlayButton();
-
-			if (autoPlayEnabled) {
-				playAndAdvance();
-			} else if (currentAudio) {
-				currentAudio.pause();
-			}
+		    autoPlayEnabled = !autoPlayEnabled;
+		    updateAutoPlayButton();
+		
+		    if (autoPlayEnabled) {
+		        playAndAdvance(); // Start autoplay
+		    } else {
+		        stopCurrentAudio(); // ✅ Stop any playing audio when autoplay is disabled
+		    }
 		});
+
 
 		function updateAutoPlayButton() {
 			const btn = document.getElementById("autoPlayToggle");
