@@ -462,8 +462,9 @@
 						}
 					}
 				};
-			}, 1500); // Added delay of 2 seconds before playing the next Ayah
+			}, 1500); 
 		}
+
 
 		document.getElementById("prev").addEventListener("click", function () {
 			autoPlayEnabled = false;
@@ -480,9 +481,9 @@
 			updateAutoPlayButton();
 		});
 		document.getElementById("saveSettings").addEventListener("click", function () {
-		        autoPlayEnabled = false;
-		        updateAutoPlayButton();
-		    });
+        autoPlayEnabled = false;
+        updateAutoPlayButton();
+    });
 	</script>
 </body>
 </html>
