@@ -17,16 +17,46 @@
             min-height: 100vh; 
             margin: 0; 
         }
-        header {
-            padding: 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-		footer {
-			background-color: #343a40;
-			color: white;
-			text-align: center;
-			padding: 10px;
-		}
+header {
+    padding: 1rem 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #212529; /* Bootstrap dark */
+    color: white;
+}
+
+.header-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.header-title {
+    color: white;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.header-subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    margin-top: 0.2rem;
+    font-weight: 400;
+}
+#settingsBtn {
+    margin-left: auto; /* Pushes the button to the extreme right */
+    margin-top: -17px; /* Adjust alignment slightly */
+}
+
+	footer {
+		background-color: #343a40;
+		color: white;
+		text-align: center;
+		padding: 10px;
+	}
         .main-content {
             flex: 1;
             padding-bottom: 10px;
@@ -131,14 +161,22 @@
     </style>
 </head>
 <body>
-    <header class="bg-dark text-white d-flex justify-content-between align-items-center">
-        <h1 class="m-0 ps-3">Quran Verse</h1>
-		  <button id="settingsBtn" class="btn btn-light me-3"><i class="bi bi-gear"></i></button>
-    </header>
+<header class="bg-dark text-white d-flex align-items-center justify-content-between">
+    <div class="header-text">
+	<h1 class="header-title">🕌 Quran Verse</h1>
+	<p class="header-subtitle">Enhance your memorization, ayah by ayah</p>
+    </div>
+    <button id="settingsBtn" class="btn btn-light ms-auto">
+	<i class="bi bi-gear"></i>
+    </button>
+</header>
+
 
 	<div class="container mt-3 d-flex align-items-center justify-content-center">
 		<label for="suraSelect" class="form-label mb-0 me-1 fw-bold">Select Surah</label>
 		<select id="suraSelect" class="form-select w-50"></select>
+		<label for="ayahSelect" class="form-label mb-0 ms-3 me-1 fw-bold">Go to Ayah</label>
+        <select id="ayahSelect" class="form-select w-25"></select>
 	</div>
 	   
     <div class="flashcard-container">
@@ -304,6 +342,7 @@
 
                     ayahIndex = Math.min(ayahIndex, currentSurah.length - 1);
                     displayAyah();
+					updateAyahDropdown();
                 }
             }).fail(() => alert("Error fetching Surah data"));
         }
@@ -368,6 +407,20 @@
 
             }
         }
+		
+		function updateAyahDropdown() {
+			$('#ayahSelect').empty();
+			for (let i = 1; i <= currentSurah.length; i++) {
+				$('#ayahSelect').append(`<option value="${i}">${i}</option>`);
+			}
+			$('#ayahSelect').val(ayahIndex + 1);
+		}
+		
+		$('#ayahSelect').change(function() {
+			ayahIndex = parseInt($(this).val()) - 1;
+			localStorage.setItem('currentAyah', ayahIndex);
+			displayAyah();
+		});
 
         $(document).ready(() => {
             loadEditions();
@@ -498,19 +551,6 @@
 				})
 				.catch(error => console.error('Audio playback error:', error));
 		}
-
-
-
-
-		document.getElementById("prev").addEventListener("click", function () {
-			autoPlayEnabled = false;
-			updateAutoPlayButton();
-			stopCurrentAudio();
-			if (ayahIndex > 0) {
-				ayahIndex--;
-				displayAyah();
-			}
-		});
 
 
 		document.getElementById("prev").addEventListener("click", function () {
