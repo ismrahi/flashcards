@@ -420,6 +420,11 @@ header {
 			ayahIndex = parseInt($(this).val()) - 1;
 			localStorage.setItem('currentAyah', ayahIndex);
 			displayAyah();
+			if (autoPlayEnabled) {
+				autoPlayEnabled = false;
+				updateAutoPlayButton();
+				stopCurrentAudio();
+			}
 		});
 
         $(document).ready(() => {
@@ -446,6 +451,11 @@ header {
                 $('#settingsModal').modal('hide');
                 loadSurah();
 				applyFontSize(); 
+				
+				autoPlayEnabled = false;
+				updateAutoPlayButton();
+				stopCurrentAudio(); // Stop any currently playing audio
+		
             });
 
             $('#suraSelect').change(function() {
@@ -463,6 +473,11 @@ header {
                     displayAyah();
                 }
                 $('#flashcard').removeClass('flipped');
+				if (autoPlayEnabled) {
+					autoPlayEnabled = false;
+					updateAutoPlayButton();
+					stopCurrentAudio();
+				}
             });
 
             $('#next').click(() => {
@@ -471,6 +486,11 @@ header {
                     localStorage.setItem('currentAyah', ayahIndex);
                     displayAyah();
                 }
+				if (autoPlayEnabled) {
+					autoPlayEnabled = false;
+					updateAutoPlayButton();
+					stopCurrentAudio();
+				}
                 $('#flashcard').removeClass('flipped');
             });
 
@@ -553,36 +573,6 @@ header {
 		}
 
 
-		document.getElementById("prev").addEventListener("click", function () {
-			if (autoPlayEnabled) {
-				autoPlayEnabled = false;
-				updateAutoPlayButton();
-				stopCurrentAudio();
-				if (ayahIndex > 0) {
-					//ayahIndex--;
-					displayAyah();
-				}
-			}
-		});
-
-		document.getElementById("next").addEventListener("click", function () {
-			if (autoPlayEnabled) {
-				autoPlayEnabled = false;
-				updateAutoPlayButton();
-				stopCurrentAudio();
-				if (ayahIndex < currentSurah.length - 1) {
-					//ayahIndex++;
-					displayAyah();
-				}
-			}
-		});
-
-		
-		document.getElementById("saveSettings").addEventListener("click", function () {
-        autoPlayEnabled = false;
-        updateAutoPlayButton();
-		stopCurrentAudio(); // Stop any currently playing audio
-		});
 	
 		function stopCurrentAudio() {
 			if (currentSource) {
