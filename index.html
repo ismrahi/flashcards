@@ -259,11 +259,11 @@ header {
 
 
     <script>
-        const API_URL = "https://api.alquran.cloud/v1/surah";
-        let sura = parseInt(localStorage.getItem('currentSura')) || 1;
-        let ayahIndex = parseInt(localStorage.getItem('currentAyah')) || 0;
-        let currentSurah = [];
-        let currentAudio = null;
+	const API_URL = "https://api.alquran.cloud/v1/surah";
+	let sura = parseInt(localStorage.getItem('currentSura')) || 1;
+	let ayahIndex = parseInt(localStorage.getItem('currentAyah')) || 0;
+	let currentSurah = [];
+	let currentAudio = null;
 	let audioContext = null;
 	let currentSource = null;
 	let autoPlayEnabled = false;
@@ -507,7 +507,6 @@ header {
         });
     </script>
     <script>
-
 		document.getElementById("autoPlayToggle").addEventListener("click", function () {
 		    autoPlayEnabled = !autoPlayEnabled;
 		    updateAutoPlayButton();
@@ -525,8 +524,6 @@ header {
 			btn.classList.toggle("btn-danger", autoPlayEnabled);
 			btn.classList.toggle("btn-success", !autoPlayEnabled);
 		}
-
-
 
 		function playAndAdvance() {
 			if (!autoPlayEnabled || ayahIndex >= currentSurah.length) {
@@ -584,6 +581,21 @@ header {
 				currentSource = null; // ✅ Clear the reference
 			}
 		}
+		
+		// Keyboard navigation
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'ArrowLeft') $('#prev').click();
+			if (e.key === 'ArrowRight') $('#next').click();
+		});
+
+		// Swipe navigation for mobile
+		let touchStartX = 0;
+		document.addEventListener('touchstart', e => touchStartX = e.touches[0].clientX);
+		document.addEventListener('touchend', e => {
+			const touchEndX = e.changedTouches[0].clientX;
+			const diff = touchStartX - touchEndX;
+			if (Math.abs(diff) > 50) diff > 0 ? $('#next').click() : $('#prev').click();
+		});
 
 
 	</script>
